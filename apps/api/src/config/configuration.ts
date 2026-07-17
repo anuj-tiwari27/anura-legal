@@ -4,7 +4,8 @@
  */
 export default () => ({
   env: process.env.NODE_ENV ?? 'development',
-  port: parseInt(process.env.API_PORT ?? '4000', 10),
+  // PORT is the conventional platform-injected variable (Railway, Render, Heroku).
+  port: parseInt(process.env.API_PORT ?? process.env.PORT ?? '4000', 10),
   webOrigin: process.env.WEB_ORIGIN ?? 'http://localhost:3000',
   databaseUrl: process.env.DATABASE_URL ?? '',
   redisUrl: process.env.REDIS_URL ?? 'redis://localhost:6379',
@@ -15,6 +16,11 @@ export default () => ({
     accessTtl: parseInt(process.env.JWT_ACCESS_TTL ?? '900', 10),
     refreshTtl: parseInt(process.env.JWT_REFRESH_TTL ?? '1209600', 10),
     otpTtl: parseInt(process.env.OTP_TTL ?? '300', 10),
+  },
+
+  google: {
+    // OAuth client ID used to verify Google Identity Services ID tokens.
+    clientId: process.env.GOOGLE_CLIENT_ID ?? '',
   },
 
   ai: {
@@ -67,6 +73,12 @@ export default () => ({
     firebaseProjectId: process.env.FIREBASE_PROJECT_ID ?? '',
     firebaseClientEmail: process.env.FIREBASE_CLIENT_EMAIL ?? '',
     firebasePrivateKey: (process.env.FIREBASE_PRIVATE_KEY ?? '').replace(/\\n/g, '\n'),
+  },
+
+  ecourts: {
+    provider: (process.env.ECOURTS_PROVIDER ?? 'none') as 'none' | 'ecourtsindia',
+    apiUrl: process.env.ECOURTS_API_URL ?? 'https://webapi.ecourtsindia.com',
+    apiToken: process.env.ECOURTS_API_TOKEN ?? '',
   },
 });
 

@@ -123,6 +123,18 @@ export class CasesService {
         filedAt: dto.filedAt ? new Date(dto.filedAt) : null,
         nextHearingDate,
         status: dto.status ?? CaseStatus.DRAFT,
+        parties: dto.parties?.length
+          ? {
+              create: dto.parties.map((p) => ({
+                name: p.name,
+                role: p.role,
+                contactEmail: p.contactEmail ?? null,
+                contactPhone: p.contactPhone ?? null,
+                advocateName: p.advocateName ?? null,
+                isClient: p.isClient ?? false,
+              })),
+            }
+          : undefined,
         // A case created with a hearing date gets a seeded HEARING timeline entry.
         timeline: nextHearingDate
           ? {
@@ -200,11 +212,8 @@ export class CasesService {
     return this.getDetail(lawyerId, id);
   }
 
-  async remove(lawyerIdRaw: string | null | undefined, id: string): Promise<void> {
-    const lawyerId = this.requireLawyer(lawyerIdRaw);
-    await this.findOwnedCaseOrThrow(id, lawyerId);
-    await this.prisma.case.delete({ where: { id } });
-  }
+  // Cases are never hard-deleted. Status transitions (DISPOSED / DRAFT / etc.)
+  // go through update() above, which records a STATUS_CHANGE timeline entry.
 
   // ---------------------------------------------------------------------------
   // Parties

@@ -1,12 +1,11 @@
 import {
   Body,
   Controller,
-  Delete,
   Get,
-  HttpCode,
   Param,
   Post,
   Query,
+  StreamableFile,
   UploadedFile,
   UseInterceptors,
 } from '@nestjs/common';
@@ -56,12 +55,35 @@ export class DocumentsController {
     return this.documents.getDownloadUrl(lawyerId, id);
   }
 
-  @Delete(':id')
-  @HttpCode(204)
-  remove(
+  /** Stream the file itself through the API — works for every storage provider. */
+  @Get(':id/file')
+  async file(
     @CurrentUser('lawyerId') lawyerId: string | null,
     @Param('id') id: string,
-  ): Promise<void> {
-    return this.documents.remove(lawyerId, id);
+  ): Promise<StreamableFile> {
+    const { doc, body } = await this.documents.downloadFile(lawyerId, id);
+    return new StreamableFile(body, {
+      type: doc.mimeType,
+      disposition: `attachment; filename="${encodeURIComponent(doc.filename)}"`,
+      length: body.byteLength,
+    });
+  }
+
+  /** Soft-delete: archive with a 30-day restore window before permanent deletion. */
+  @Post(':id/archive')
+  archive(
+    @CurrentUser('lawyerId') lawyerId: string | null,
+    @Param('id') id: string,
+  ): Promise<DocumentView> {
+    return this.documents.archive(lawyerId, id);
+  }
+
+  /** Restore an archived document back to the active list. */
+  @Post(':id/restore')
+  restore(
+    @CurrentUser('lawyerId') lawyerId: string | null,
+    @Param('id') id: string,
+  ): Promise<DocumentView> {
+    return this.documents.restore(lawyerId, id);
   }
 }
